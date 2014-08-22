@@ -122,9 +122,9 @@ class NNBP():
                 n += 1
                 self.wo[i][j] = Decimal(arr[n])
         # activations for nodes
-        self.ai = [1.0]*self.ni
-        self.ah = [1.0]*self.nh
-        self.ao = [1.0]*self.no
+        self.ai = [Decimal(1.0)]*self.ni
+        self.ah = [Decimal(1.0)]*self.nh
+        self.ao = [Decimal(1.0)]*self.no
         self.ci = self.makeMatrix(self.ni, self.nh)
         self.co = self.makeMatrix(self.nh, self.no)
 
@@ -224,11 +224,11 @@ class NNBP():
     def train(self, patterns, N=1, M=0.1):
         # N: learning rate
         # M: momentum factor
-        error = 999999999999.0
+        error = (len(patterns)*2)+1
         i = 0
         while (math.fabs(error))>(len(patterns)*2):
+            if error != 0.0: N = math.fabs(error)/len(patterns)
             error = Decimal(0.0)
-            if error != 0.0: N = (math.fabs(error)/52)/len(putterns)
             print N, "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"
             for p in patterns:
                 print p[0]
