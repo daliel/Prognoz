@@ -1,7 +1,9 @@
 from Tkinter import *
+from tkFileDialog import *
 
 import ttk
 import math
+import other
 
 class APP():
     def __init__(self):
@@ -18,6 +20,21 @@ class APP():
             if self.mainValues[i] == self.combobox.get():
                 if i == 0:
                     print self.mainValues[i]
+                    self.BackPropagate()
+                    
+    def BackPropagate(self):
+        
+        self.combobox.grid_forget()
+        self.mainButton.grid_forget()
+        self.root.update()
+        #self.NNBP_New_Teach = Button(self.root, text = "New Teach", command = self.)
+        options = {"title": "Open Data File", "filetypes": [('text files', '.txt')]}
+        dataFile = askopenfilename(**options)
+        putterns = other.create_pattern_52(other.read_file_data_r(dataFile))
+        nn = NNBP(6,6, 52)
+        nn.train(putterns)
+        root.close()
+    
     def run(self):
         self.root.mainloop()
         
@@ -61,12 +78,7 @@ class NNBP():
     
     # derivative of our sigmoid function, in terms of the output (i.e. y)
     def DeActivation(self, y):
-        n = ( 1-(1/y))*math.e
-        for i in xrange(1, 53):
-            if n== -1.0: return i
-            n*=math.e
-        
-        return 0
+        return math.fabs(math.log((1/y)-1))
     
     # calculate a random number where:  a <= rand < b
     def rand(self, a, b):
@@ -198,7 +210,7 @@ class NNBP():
         # M: momentum factor
         error = 999999999999.0
         i = 0
-        while error>len(patterns) or not self.st:
+        while error>len(patterns):
             error = 0.0
             for p in patterns:
                 print p[0]
@@ -206,6 +218,7 @@ class NNBP():
                 targets = p[1]
                 self.update(inputs)
                 error = error + self.backPropagate(targets, N, M)
+                print error, "Error"
             self.save("%s.sav"%self.nh)
             #self.write_log(i, error)
             i+=1
@@ -213,7 +226,4 @@ class NNBP():
         self.terminate()
         
 if __name__ == "__main__":
-    nn = NNBP(6,1,52)
-    a = nn.Activation(1)
-    print a, "a"
-    print nn.DeActivation(a)
+    APP()

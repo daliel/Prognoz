@@ -7,7 +7,7 @@ def main(x):
     demain(ac)
 def demain(ac):
     n = ((1/ac)-1)* math.e
-    print math.log((1/ac)-1)
+    print math.fabs(math.log((1/ac)-1))
     """for i in xrange(1,53):
         if n == float(-1):
             print n, i
