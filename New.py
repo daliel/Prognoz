@@ -1,5 +1,6 @@
 from Tkinter import *
 from tkFileDialog import *
+from decimal import Decimal
 
 import ttk
 import math
@@ -46,9 +47,9 @@ class NNBP():
         self.no = no
 
         # activations for nodes
-        self.ai = [1.0]*self.ni
-        self.ah = [1.0]*self.nh
-        self.ao = [1.0]*self.no
+        self.ai = [Decimal(1.0)]*self.ni
+        self.ah = [Decimal(1.0)]*self.nh
+        self.ao = [Decimal(1.0)]*self.no
         
         # create weights
         self.wi = self.makeMatrix(self.ni, self.nh)
@@ -56,10 +57,10 @@ class NNBP():
         # set them to random vaules
         for i in range(self.ni):
             for j in range(self.nh):
-                self.wi[i][j] = 1
+                self.wi[i][j] = Decimal(1)
         for j in range(self.nh):
             for k in range(self.no):
-                self.wo[j][k] = 1
+                self.wo[j][k] = Decimal(1)
 
         # last change in weights for momentum   
         self.ci = self.makeMatrix(self.ni, self.nh)
@@ -67,18 +68,23 @@ class NNBP():
     
     # our sigmoid function, tanh is a little nicer than the standard 1/(1+e^-x)
     def Activation(self, x):
-        return 1 /(1+(math.e**-x))
+        return Decimal(1 /(1+Decimal(math.e)**(Decimal(-x))))
         
     # Make a matrix (we could use NumPy to speed this up)
     def makeMatrix(self, I, J, fill=0.0):
         m = []
+        fill= Decimal(fill)
         for i in range(I):
             m.append([fill]*J)
         return m
     
     # derivative of our sigmoid function, in terms of the output (i.e. y)
     def DeActivation(self, y):
-        return math.fabs(math.log((1/y)-1))
+        a =Decimal(1/y)
+        b = Decimal(a-1)
+        try: return math.fabs(math.log(b))
+        except: return Decimal(47)
+        return Decimal(math.fabs(math.log(b)))
     
     # calculate a random number where:  a <= rand < b
     def rand(self, a, b):
@@ -110,11 +116,11 @@ class NNBP():
         for i in xrange(self.ni):
             for j in xrange(self.nh):
                 n += 1
-                self.wi[i][j] = float(arr[n])
+                self.wi[i][j] = Decimal(arr[n])
         for i in xrange(self.nh):
             for j in xrange(self.no):
                 n += 1
-                self.wo[i][j] = float(arr[n])
+                self.wo[i][j] = Decimal(arr[n])
         # activations for nodes
         self.ai = [1.0]*self.ni
         self.ah = [1.0]*self.nh
@@ -133,14 +139,14 @@ class NNBP():
 
         # hidden activations
         for j in range(self.nh):
-            sum = 0.0
+            sum = Decimal(0.0)
             for i in range(self.ni):
                 sum = sum + self.ai[i] * self.wi[i][j]
             self.ah[j] = self.Activation(sum)
 
         # output activations
         for k in range(self.no):
-            sum = 0.0
+            sum = Decimal(0.0)
             for j in range(self.nh):
                 sum = sum + self.ah[j] * self.wo[j][k]
             self.ao[k] = self.Activation(sum)
@@ -155,17 +161,22 @@ class NNBP():
         # calculate error terms for output
         output_deltas = [0.0] * self.no
         for k in range(self.no):
-            error = targets[k]-self.ao[k]
-            output_deltas[k] = self.DeActivation(self.ao[k]) * error
+            error = Decimal(targets[k]-self.ao[k])
+            output_deltas[k] = Decimal(self.DeActivation(self.ao[k])) * Decimal(error)
 
         # calculate error terms for hidden
         hidden_deltas = [0.0] * self.nh
         for j in range(self.nh):
-            error = 0.0
+            error = Decimal(0.0)
             for k in range(self.no):
                 error = error + output_deltas[k]*self.wo[j][k]
-            hidden_deltas[j] = self.DeActivation(self.ah[j]) * error
-
+            hidden_deltas[j] = Decimal(self.DeActivation(self.ah[j])) * error
+        
+        # calculate error
+        error = Decimal(0.0)
+        for k in range(len(targets)):
+            error = error + Decimal(targets[k]-self.ao[k])
+        
         # update output weights
         for j in range(self.nh):
             for k in range(self.no):
@@ -173,7 +184,7 @@ class NNBP():
                 #print "len(self.co)", len(self.co), len(self.co[j])
                 #print "len(self.wo)", len(self.wo), len(self.wo[j])
                 #print "j, k", j, k
-                self.wo[j][k] = self.wo[j][k] + N*change + M*self.co[j][k]
+                self.wo[j][k] = self.wo[j][k] + Decimal(N)*change + Decimal(M)*self.co[j][k]
                 self.co[j][k] = change
                 #print N*change, M*self.co[j][k]
 
@@ -181,13 +192,10 @@ class NNBP():
         for i in range(self.ni):
             for j in range(self.nh):
                 change = hidden_deltas[j]*self.ai[i]
-                self.wi[i][j] = self.wi[i][j] + N*change + M*self.ci[i][j]
+                self.wi[i][j] = self.wi[i][j] + Decimal(N)*change + Decimal(M)*self.ci[i][j]
                 self.ci[i][j] = change
 
-        # calculate error
-        error = 0.0
-        for k in range(len(targets)):
-            error = error + 0.5*(targets[k]-self.ao[k])**2
+        
         return error
 
 
@@ -211,7 +219,7 @@ class NNBP():
         error = 999999999999.0
         i = 0
         while error>len(patterns):
-            error = 0.0
+            error = Decimal(0.0)
             for p in patterns:
                 print p[0]
                 inputs = p[0]

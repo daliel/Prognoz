@@ -17,12 +17,7 @@ def IntListToTrans( e):
         a[e-1]=1
     return a[:] 
     
-def create_pattern_52(d):
-    k = [[] for i in xrange(len(d)-1)]
-    for i in xrange(len(d)-1):
-        k[i].append(d[i])
-        k[i].append(IntListToTrans(d[i+1]))
-    return k[:]  
+
 
 def read_file_data(fname):
     result = []
