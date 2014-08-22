@@ -23,8 +23,7 @@ class APP():
                     print self.mainValues[i]
                     self.BackPropagate()
                     
-    def BackPropagate(self):
-        
+    def BackPropagate(self):        
         self.combobox.grid_forget()
         self.mainButton.grid_forget()
         self.root.update()
@@ -33,8 +32,9 @@ class APP():
         dataFile = askopenfilename(**options)
         putterns = other.create_pattern_52(other.read_file_data_r(dataFile))
         nn = NNBP(6,6, 52)
+        nn.load("%i.sav"%nn.nh)
         nn.train(putterns)
-        root.close()
+        self.root.close()
     
     def run(self):
         self.root.mainloop()
@@ -80,11 +80,10 @@ class NNBP():
     
     # derivative of our sigmoid function, in terms of the output (i.e. y)
     def DeActivation(self, y):
+        if y == 1: return 0
         a =Decimal(1/y)
         b = Decimal(a-1)
-        try: return math.fabs(math.log(b))
-        except: return Decimal(47)
-        return Decimal(math.fabs(math.log(b)))
+        return math.fabs(b.ln())
     
     # calculate a random number where:  a <= rand < b
     def rand(self, a, b):
@@ -105,10 +104,11 @@ class NNBP():
         f.close()
 
     def load(self, fname):
+        print fname
         f = open(fname, "r")
         line = f.read()
         f.close()
-        arr = string.split(line, ";")
+        arr = line.split( ";")
         self.ni, self.nh, self.no = int(arr[0]), int(arr[1]), int(arr[2])
         self.wi = self.makeMatrix(self.ni, self.nh)
         self.wo = self.makeMatrix(self.nh, self.no)
@@ -170,6 +170,13 @@ class NNBP():
             error = Decimal(0.0)
             for k in range(self.no):
                 error = error + output_deltas[k]*self.wo[j][k]
+            if Decimal(self.DeActivation(self.ah[j]))<= -999999999 or Decimal(self.DeActivation(self.ah[j]))>= 999999999:
+                print self.ah[j], "self.ah[j]"
+                a =Decimal(1/self.ah[j])
+                print a, "1/self.ah[j]"
+                b = Decimal(a-1)
+                print b, "1/self.ah[j]-1"
+                print b.ln(), "b.ln()"
             hidden_deltas[j] = Decimal(self.DeActivation(self.ah[j])) * error
         
         # calculate error
@@ -177,6 +184,7 @@ class NNBP():
         for k in range(len(targets)):
             error = error + Decimal(targets[k]-self.ao[k])
         
+            
         # update output weights
         for j in range(self.nh):
             for k in range(self.no):
@@ -218,8 +226,10 @@ class NNBP():
         # M: momentum factor
         error = 999999999999.0
         i = 0
-        while error>len(patterns):
+        while (math.fabs(error))>(len(patterns)*2):
             error = Decimal(0.0)
+            if error != 0.0: N = (math.fabs(error)/52)/len(putterns)
+            print N, "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"
             for p in patterns:
                 print p[0]
                 inputs = p[0]
@@ -228,10 +238,9 @@ class NNBP():
                 error = error + self.backPropagate(targets, N, M)
                 print error, "Error"
             self.save("%s.sav"%self.nh)
-            #self.write_log(i, error)
-            i+=1
+        print math.fabs(error)
            
-        self.terminate()
+        
         
 if __name__ == "__main__":
     APP()
